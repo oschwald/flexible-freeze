@@ -45,6 +45,8 @@ parser.add_argument("--no-freeze", dest="skip_freeze", action="store_true",
                     help="Do VACUUM ANALYZE instead of VACUUM FREEZE ANALYZE")
 parser.add_argument("--no-analyze", dest="skip_analyze", action="store_true",
                     help="Do not do an ANALYZE as part of the VACUUM operation")
+parser.add_argument("--no-truncate", dest="skip_truncate", action="store_true",
+                    help="Do not truncate off empty pages as part of the VACUUM operation")
 parser.add_argument("--vacuum", dest="vacuum", action="store_true",
                     help="Do VACUUM ANALYZE instead of VACUUM FREEZE ANALYZE (deprecated option; use --no-freeze instead)")
 parser.add_argument("--pause", dest="pause_time", type=int, default=10,                    
@@ -310,10 +312,15 @@ for db in dblist:
             
     # if not, vacuum or freeze
         exquery = "VACUUM "
+        options = []
         if not args.skip_freeze:
-            exquery += "FREEZE "
+            options.append("FREEZE")
         if not args.skip_analyze:
-            exquery += "ANALYZE "
+            options.append("ANALYZE")
+        if args.skip_truncate:
+            options.append("TRUNCATE false")
+        if options:
+            exquery += "(%s) " % ", ".join(options)
         
         exquery += '"%s"' % table
 
